@@ -68,7 +68,6 @@ def assignCluster(initialCentroids):
     #Every row / Client
     for client in range(lines):       
         distanceAux = 0.0
-    #    distance[i].append(i)
         #Every cluster needed
         for cluster in range(k):
             #All the columns in the centroids
@@ -77,10 +76,8 @@ def assignCluster(initialCentroids):
             distanceAux = math.sqrt(distanceAux)
             distance[client].append(distanceAux)
     #Distance from one point to all the others
-    #print(distance)
             
     ##GETS THE CORRESPONDING CLUSTER FOR EACH CLIENT
-    #clusterAttribution = []
     reassignedClients = 0
     oldCluster = 0
     for client in range(lines):
@@ -105,7 +102,6 @@ def updateCentroid(updatedCentroids,clusters):
     sumVal = [[0 for l in range (len(clusterColumns))] for i in range (k)]
     countVal =  [[0 for l in range (len(clusterColumns))] for i in range (k)]
     for cluster in clusters:
-        #print ("Working on cluster {}".format(clusters.index(cluster)))
         for client in cluster:
             # -2 because we have 2 extra columns
             for availableColumns in range(len(client)- 2):
@@ -115,7 +111,7 @@ def updateCentroid(updatedCentroids,clusters):
     print("Initial clustering", updatedCentroids)
     #print("sumVal",sumVal)
     #print("countVal",countVal)
-    #plotClusters(updatedCentroids, selectedData)
+
     for cluster in clusters:
         for availableColumns in range(len(clusterColumns)):
             if(countVal[clusters.index(cluster)][availableColumns]>0):
@@ -132,8 +128,6 @@ def showResults():
     for i in range(k):
         print("Cluster {} has {} elements".format(i+1,len(clusters[i])))  
         
-    
-    #plotClusters(initialCentroids, selectedData)    
             
 ####GENERAL PARAMETERS ######
 filename = "DatasetClean.csv"
@@ -147,13 +141,13 @@ numberIterations = 10
 
 
 
-
+#Inicialization
 print ("Running K-Means with K =  {} and {} variables ".format(k,len(clusterColumns)-1))
 selectedData = readDataSet(filename, clusterColumns)
 centroids = selectInitialCentoid(selectedData)
 
 
-
+#Move elements from centroids
 for i in range(1, numberIterations):
     print("Run ", i)
     #Creates List with clusters and the clients in each cluster. 
