@@ -5,8 +5,8 @@ import matplotlib.pyplot as plot
 
 
 def plotClusters(centroids, clusters,runNumber):
-    colors = ["b", "g", "r","y"]
-    colorsCluster = ["g", "r","b","y"]
+    colors = ["b", "g", "r","y","c","k","m","violet","aqua","forestgreen"]
+    colorsCluster = ["g", "r","b","y","c","k","m","violet","aqua","forestgreen"]
 #    markers = ["o", "o", "o"]
 #    markers = ["^", "s", ""]
 
@@ -15,12 +15,12 @@ def plotClusters(centroids, clusters,runNumber):
     ax.set_title('K-Means # {}'.format(runNumber))
     for cluster in clusters:
         for client in cluster:
-            ax.scatter(client[1], client[2], color=colors[clusters.index(cluster)], s=100, marker=",")
+            ax.scatter(client[1], client[2], color=colors[clusters.index(cluster)], s=5, marker=",")
             #ax.annotate(str(point[1]), (point[1] + 1, point[2] + 1))
             index = (index + 1) % len(colors)
     index = 0
     for centroid in centroids:
-        ax.scatter(centroid[1], centroid[2], color=colorsCluster[index], s=500, marker="x")
+        ax.scatter(centroid[1], centroid[2], color=colorsCluster[index], s=900, marker="x")
         ax.annotate("C" + str(index + 1), (centroid[1] + 2, centroid[2] + 2))
         index = (index + 1) % len(colors)
 
@@ -47,7 +47,30 @@ def readDataSet(filename, clusterColumns):
         selectedData[i].append(initialCluster)
     
     return selectedData
-  
+
+    
+def selectInitialCentoidUniform(selectedData):
+    ##SELECTS RANDOM K CENTROIDS FROM THE NEW SET
+    initialCentroids = [[] for i in range(k)]
+    initialOffset = 0
+    rightRange = round(lines/k,0)
+    print("Running with uniform initial clusters")
+    print("Intervals for initial clusters")
+    for i in range(k):
+        r = random.randint(initialOffset,rightRange )
+        print("Client number from {} to {}".format(initialOffset,rightRange))
+        initialCentroids[i] = selectedData[r]
+        if (offsetIdClient == 0):
+            initialCentroids[i].pop(0)
+        initialOffset = rightRange + 1
+        rightRange = round(((lines/k) * (i + 2)),0)
+    #
+    print ("Initial centroid selected")
+    print(initialCentroids)
+    return initialCentroids
+    
+    
+    
 def selectInitialCentoid(selectedData):
     ##SELECTS RANDOM K CENTROIDS FROM THE NEW SET
     initialCentroids = [[] for i in range(k)]
@@ -78,6 +101,7 @@ def assignCluster(initialCentroids):
     #Distance from one point to all the others
             
     ##GETS THE CORRESPONDING CLUSTER FOR EACH CLIENT
+    global reassignedClients
     reassignedClients = 0
     oldCluster = 0
     for client in range(lines):
@@ -124,7 +148,7 @@ def updateCentroid(updatedCentroids,clusters):
     
 def showResults():
 
-    plotClusters(centroids, clusters,numberIterations)
+    plotClusters(centroids, clusters,runNumber)
     for i in range(k):
         print("Cluster {} has {} elements".format(i+1,len(clusters[i])))  
         
@@ -132,29 +156,40 @@ def showResults():
 ####GENERAL PARAMETERS ######
 filename = "DatasetClean.csv"
 clusterColumns = []
-#clusterColumns=[3,4,1]
+clusterColumns=[3,4,1]
 #We need to set this to 1 if we are reading the ID of the client.
 offsetIdClient = 1
-clusterColumns=[46, 81,83]
-k = 4
+#clusterColumns=[46, 81,83]
+k = 10
 numberIterations = 10
-
+useUniformCentoirds = 1
+runNumber = 1
+stopChangePerIteration = 0.03
 
 
 #Inicialization
 print ("Running K-Means with K =  {} and {} variables ".format(k,len(clusterColumns)-1))
 selectedData = readDataSet(filename, clusterColumns)
-centroids = selectInitialCentoid(selectedData)
+
+
+if(useUniformCentoirds == 1):
+    centroids = selectInitialCentoidUniform(selectedData)
+else:
+    centroids = selectInitialCentoid(selectedData)
+reassignedClients = lines
 
 
 #Move elements from centroids
-for i in range(1, numberIterations):
-    print("Run ", i)
+while (reassignedClients/lines > stopChangePerIteration):
+#for i in range(1, numberIterations):
+    print("Run ", runNumber)
     #Creates List with clusters and the clients in each cluster. 
     #Updates the original selectedData with the current number of cluster for the client.
     clusters = assignCluster(centroids)
+    if(runNumber==1):
+         showResults()
     centroids = updateCentroid(centroids,clusters)
-
+    runNumber += 1
     
 showResults()
     
