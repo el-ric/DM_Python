@@ -14,14 +14,18 @@ def plotClusters(centroids, clusters,runNumber):
     index = 0
     ax.set_title('K-Means # {}'.format(runNumber))
     for cluster in clusters:
-        for client in cluster:
-            ax.scatter(client[1], client[2], color=colors[clusters.index(cluster)], s=5, marker=",")
-            #ax.annotate(str(point[1]), (point[1] + 1, point[2] + 1))
-            index = (index + 1) % len(colors)
+        if(len(cluster)>0):
+            transformedPoints = PCA(2).fit_transform(cluster).tolist()
+            for point in transformedPoints:
+                ax.scatter(point[0], point[1], color=colors[clusters.index(cluster)], s=5, marker=",")
+                #ax.annotate(str(point[1]), (point[1] + 1, point[2] + 1))
+                index = (index + 1) % len(colors)
     index = 0
-    for centroid in centroids:
-        ax.scatter(centroid[1], centroid[2], color=colorsCluster[index], s=900, marker="x")
-        ax.annotate("C" + str(index + 1), (centroid[1] + 2, centroid[2] + 2))
+    transformedPoints = PCA(2).fit_transform(centroids).tolist()
+    print ("PCA centroids", transformedPoints)
+    for point in transformedPoints:
+        ax.scatter(point[0], point[1], color=colorsCluster[index], s=900, marker="x")
+        ax.annotate("C" + str(index + 1), (point[0] + 2, point[1] + 2))
         index = (index + 1) % len(colors)
 
     fig.canvas.draw()
@@ -59,9 +63,7 @@ def selectInitialCentoidUniform(selectedData):
     for i in range(k):
         r = random.randint(initialOffset,rightRange )
         print("Client number from {} to {}".format(initialOffset,rightRange))
-        initialCentroids[i] = selectedData[r]
-        if (offsetIdClient == 0):
-            initialCentroids[i].pop(0)
+        initialCentroids[i] = selectedData[r][1:len(selectedData[r])-1]
         initialOffset = rightRange + 1
         rightRange = round(((lines/k) * (i + 2)),0)
     #
@@ -76,10 +78,10 @@ def selectInitialCentoid(selectedData):
     initialCentroids = [[] for i in range(k)]
     for i in range(k):
         r = random.randint(0, lines)
-        initialCentroids[i] = selectedData[r]
-        if (offsetIdClient == 0):
-            initialCentroids[i].pop(0)
-    #
+        #From the original dataset take away the first and last element (id of client and cluster)
+        initialCentroids[i] = selectedData[r][1:len(selectedData[r])-1]
+
+    
     print ("Initial centroid selected")
     print(initialCentroids)
     return initialCentroids
@@ -89,15 +91,16 @@ def assignCluster(initialCentroids):
     ##CALCULATE THE EUCLIDEAN DISTANCE FROM EACH POINT IN THE DATASET TO EACH CLUSTER POINT
     distance = [[] for i in range(lines)]
     #Every row / Client
-    for client in range(lines):       
+    for clientID in range(lines):       
         distanceAux = 0.0
         #Every cluster needed
-        for cluster in range(k):
+        for clusterID in range(k):
             #All the columns in the centroids
-            for column in range(1, len(clusterColumns)):
-                distanceAux += math.pow(selectedData[client][column] - initialCentroids[cluster][column], 2)
+            for columnID in range(len(clusterColumns)):
+                # +1 FIX for the last column with the ID of the client
+                distanceAux += math.pow(selectedData[clientID][columnID + 1] - initialCentroids[clusterID][columnID], 2)
             distanceAux = math.sqrt(distanceAux)
-            distance[client].append(distanceAux)
+            distance[clientID].append(distanceAux)
     #Distance from one point to all the others
             
     ##GETS THE CORRESPONDING CLUSTER FOR EACH CLIENT
@@ -110,12 +113,15 @@ def assignCluster(initialCentroids):
         selectedData[clientID][len(selectedData[clientID])-1] = clusterNumber
         if(oldCluster != clusterNumber):
             reassignedClients += 1
+            #print("Customer:",selectedData[clientID][0],"Old:",oldCluster," New:",clusterNumber,"Distance:",distance[clientID])
     print("reassignedClients")
     print(reassignedClients)
+
     #creates a list for each cluster with the client details --Easy to do math operations on separate lists.
     #THIS PART MIGHT BE DUPICATED; WE ARE GETTING THE CLUSTER ID ON TWO VARIABLES
     clusters = [[] for i in range(k)]  
     for client in selectedData:
+        #Appends the client to the cluster list that corresponds WITHOUT the initial ID and the cluster number
         clusters[client[len(client) - 1]].append(client[1:len(client) - 1])
 
     return clusters
@@ -131,20 +137,19 @@ def updateCentroid(updatedCentroids,clusters):
             for columnID in range(len(clusterColumns)):
                 # +1 offsetIdClient because the first element of the client is the ID.
                 
-                print(client)
-                print(columnID)
-                print(client[columnID])
+                #print(client)
+                #print(columnID)
+               # print(client[columnID])
                 sumVal[clusters.index(cluster)][columnID] += client[columnID]
                 countVal[clusters.index(cluster)][columnID] += 1 
     print("Initial clustering", updatedCentroids)
-    print("sumVal",sumVal)
-    print("countVal",countVal)
+    #print("sumVal",sumVal)
+    #print("countVal",countVal)
 
     for cluster in clusters:
-        for availableColumns in range(len(clusterColumns)):
-            if(countVal[clusters.index(cluster)][availableColumns]>0):
-                #+1 offsetIdClient because the first element of the client is the ID.
-                updatedCentroids[clusters.index(cluster)][availableColumns + offsetIdClient] = sumVal[clusters.index(cluster)][availableColumns] / countVal[clusters.index(cluster)][availableColumns]
+        for columnID in range(len(clusterColumns)):
+            if(countVal[clusters.index(cluster)][columnID]>0):
+                updatedCentroids[clusters.index(cluster)][columnID] = sumVal[clusters.index(cluster)][columnID] / countVal[clusters.index(cluster)][columnID]
 
     print("After",updatedCentroids)
     return updatedCentroids
@@ -152,7 +157,7 @@ def updateCentroid(updatedCentroids,clusters):
     
 def showResults():
 
-    #plotClusters(centroids, clusters,runNumber)
+    plotClusters(centroids, clusters,runNumber)
     for i in range(k):
         print("Cluster {} has {} elements".format(i+1,len(clusters[i])))  
         
@@ -160,15 +165,13 @@ def showResults():
 ####GENERAL PARAMETERS ######
 filename = "DatasetClean.csv"
 clusterColumns = []
-#clusterColumns=[3,4,1]
-#We need to set this to 1 if we are reading the ID of the client.
-offsetIdClient = 0
-clusterColumns=[46, 81,83]
+clusterColumns=[3,4,1]
+#clusterColumns=[46, 81,83]
 k = 3
 numberIterations = 10
-useUniformCentoirds = 1
+useUniformCentoirds = 0
 runNumber = 1
-stopChangePerIteration = 0.001
+stopChangePerIteration = 0.05
 
 
 #Inicialization
@@ -187,7 +190,7 @@ reassignedClients = lines
 while (reassignedClients/lines > stopChangePerIteration):
 #for i in range(1, numberIterations):
     print("Run ", runNumber)
-    #Creates List with clusters and the clients in each cluster. 
+#    #Creates List with clusters and the clients in each cluster. 
     #Updates the original selectedData with the current number of cluster for the client.
     clusters = assignCluster(centroids)
     if(runNumber==1):
