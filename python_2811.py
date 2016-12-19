@@ -2,7 +2,7 @@ import pandas
 import random
 import math
 import matplotlib.pyplot as plot
-
+from sklearn.decomposition.pca import PCA
 
 def plotClusters(centroids, clusters,runNumber):
     colors = ["b", "g", "r","y","c","k","m","violet","aqua","forestgreen"]
@@ -104,10 +104,10 @@ def assignCluster(initialCentroids):
     global reassignedClients
     reassignedClients = 0
     oldCluster = 0
-    for client in range(lines):
-        clusterNumber = distance[client].index(min(distance[client]))
-        oldCluster =  selectedData[client][len(selectedData[client])-1]
-        selectedData[client][len(selectedData[client])-1] = clusterNumber
+    for clientID in range(lines):
+        clusterNumber = distance[clientID].index(min(distance[clientID]))
+        oldCluster =  selectedData[clientID][len(selectedData[clientID])-1]
+        selectedData[clientID][len(selectedData[clientID])-1] = clusterNumber
         if(oldCluster != clusterNumber):
             reassignedClients += 1
     print("reassignedClients")
@@ -116,7 +116,7 @@ def assignCluster(initialCentroids):
     #THIS PART MIGHT BE DUPICATED; WE ARE GETTING THE CLUSTER ID ON TWO VARIABLES
     clusters = [[] for i in range(k)]  
     for client in selectedData:
-        clusters[client[len(client) - 1]].append(client)
+        clusters[client[len(client) - 1]].append(client[1:len(client) - 1])
 
     return clusters
 
@@ -128,13 +128,17 @@ def updateCentroid(updatedCentroids,clusters):
     for cluster in clusters:
         for client in cluster:
             # -2 because we have 2 extra columns
-            for availableColumns in range(len(client)- 2):
+            for columnID in range(len(clusterColumns)):
                 # +1 offsetIdClient because the first element of the client is the ID.
-                sumVal[clusters.index(cluster)][availableColumns] += client[availableColumns + offsetIdClient]
-                countVal[clusters.index(cluster)][availableColumns] += 1 
+                
+                print(client)
+                print(columnID)
+                print(client[columnID])
+                sumVal[clusters.index(cluster)][columnID] += client[columnID]
+                countVal[clusters.index(cluster)][columnID] += 1 
     print("Initial clustering", updatedCentroids)
-    #print("sumVal",sumVal)
-    #print("countVal",countVal)
+    print("sumVal",sumVal)
+    print("countVal",countVal)
 
     for cluster in clusters:
         for availableColumns in range(len(clusterColumns)):
@@ -148,7 +152,7 @@ def updateCentroid(updatedCentroids,clusters):
     
 def showResults():
 
-    plotClusters(centroids, clusters,runNumber)
+    #plotClusters(centroids, clusters,runNumber)
     for i in range(k):
         print("Cluster {} has {} elements".format(i+1,len(clusters[i])))  
         
@@ -156,15 +160,15 @@ def showResults():
 ####GENERAL PARAMETERS ######
 filename = "DatasetClean.csv"
 clusterColumns = []
-clusterColumns=[3,4,1]
+#clusterColumns=[3,4,1]
 #We need to set this to 1 if we are reading the ID of the client.
-offsetIdClient = 1
-#clusterColumns=[46, 81,83]
-k = 10
+offsetIdClient = 0
+clusterColumns=[46, 81,83]
+k = 3
 numberIterations = 10
 useUniformCentoirds = 1
 runNumber = 1
-stopChangePerIteration = 0.03
+stopChangePerIteration = 0.001
 
 
 #Inicialization
