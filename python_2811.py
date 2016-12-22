@@ -71,9 +71,8 @@ def selectInitialCentoidUniform(selectedData):
     print(initialCentroids)
     return initialCentroids
     
-    
-    
-def selectInitialCentoid(selectedData):
+       
+def selectInitialCentroid(selectedData):
     ##SELECTS RANDOM K CENTROIDS FROM THE NEW SET
     initialCentroids = [[] for i in range(k)]
     for i in range(k):
@@ -82,35 +81,69 @@ def selectInitialCentoid(selectedData):
         initialCentroids[i] = selectedData[r][1:len(selectedData[r])-1]
 
     
-    print ("Initial centroid selected")
+    print ("Initial centroids selected")
     print(initialCentroids)
     return initialCentroids
+
+    
+def selectInitialCentroidWeighted(selectedData):
+    initialCentroids = [[0 for i in range (len(clusterColumns))] for j in range(k)]
+    #From the original dataset take away the first and last element (id of client and cluster)                    
+    for i in range(k):
+        if i == 0:
+        #select the first centroid randomly
+            r = random.randint(0, lines)
+            initialCentroids[i] = selectedData[r][1:len(selectedData[r])-1]
+        else:
+        ##SELECTS K-1 CENTROIDS FROM THE NEW SET WITH A WEIGHTED PROBABILITY
+        #COMPUTE THE WEIGHT DISTANCE TO THE CENTROID
+            initialDistance = [[] for i in range(lines)]
+            smallestDistance = [0 for i in range(lines)]
+            
+            for client in range(lines):
+                #calculate the distance to the previous selected centroids 
+                #and select the shortest
+                for cluster in range(k):
+                    if initialCentroids[cluster] != [0,0,0]:
+                       initialDistance[client].append(euclideanDistance(selectedData[client], initialCentroids[cluster]))
+                       smallestDistance[client] = math.pow(min(initialDistance[client]),2)
+            boundary = 0.0
+            for client in range (lines):
+                boundary += smallestDistance[client]
+            r = random.uniform(0, boundary)
+            cumulativeWeight = 0.0
+            tempClient = -1
+            for client in range(lines):
+                if cumulativeWeight < r:  
+                    cumulativeWeight += smallestDistance[client]
+                else:                
+                    tempClient = client
+                    break
+            initialCentroids[i] = selectedData[tempClient][1:len(selectedData[tempClient])-1]
+    
+    print ("Initial centroids selected")
+    print(initialCentroids)
+    return initialCentroids
+    
     
 def assignCluster(initialCentroids):
     ########DO THIS UNTIL CONVERGENCE!#########
     ##CALCULATE THE EUCLIDEAN DISTANCE FROM EACH POINT IN THE DATASET TO EACH CLUSTER POINT
     distance = [[] for i in range(lines)]
     #Every row / Client
-    for clientID in range(lines):       
-        distanceAux = 0.0
+    for client in range(lines):       
         #Every cluster needed
-        for clusterID in range(k):
-            #All the columns in the centroids
-            for columnID in range(len(clusterColumns)):
-                # +1 FIX for the last column with the ID of the client
-                distanceAux += math.pow(selectedData[clientID][columnID + 1] - initialCentroids[clusterID][columnID], 2)
-            distanceAux = math.sqrt(distanceAux)
-            distance[clientID].append(distanceAux)
-    #Distance from one point to all the others
+        for cluster in range(k):
+            distance[client].append(euclideanDistance(selectedData[client], initialCentroids[cluster]))           
             
     ##GETS THE CORRESPONDING CLUSTER FOR EACH CLIENT
     global reassignedClients
     reassignedClients = 0
     oldCluster = 0
-    for clientID in range(lines):
-        clusterNumber = distance[clientID].index(min(distance[clientID]))
-        oldCluster =  selectedData[clientID][len(selectedData[clientID])-1]
-        selectedData[clientID][len(selectedData[clientID])-1] = clusterNumber
+    for client in range(lines):
+        clusterNumber = distance[client].index(min(distance[client]))
+        oldCluster =  selectedData[client][len(selectedData[client])-1]
+        selectedData[client][len(selectedData[client])-1] = clusterNumber
         if(oldCluster != clusterNumber):
             reassignedClients += 1
             #print("Customer:",selectedData[clientID][0],"Old:",oldCluster," New:",clusterNumber,"Distance:",distance[clientID])
@@ -157,40 +190,45 @@ def updateCentroid(updatedCentroids,clusters):
     
 def showResults():
 
-    plotClusters(centroids, clusters,runNumber)
+    plotClusters(centroids, clusters, runNumber)
     for i in range(k):
         print("Cluster {} has {} elements".format(i+1,len(clusters[i])))  
+
         
+def euclideanDistance(client, centroid):
+    distanceAux = 0.0
+    for column in range(len(clusterColumns)):
+    # +1 FIX for the last column with the ID of the client
+        distanceAux += math.pow(client[column + 1] - centroid[column], 2)
+    distanceAux = math.sqrt(distanceAux)
+    return distanceAux
             
 ####GENERAL PARAMETERS ######
 filename = "DatasetClean.csv"
 clusterColumns = []
-clusterColumns=[3,4,1]
-#clusterColumns=[46, 81,83]
-k = 3
+#clusterColumns=[3,4,1]
+clusterColumns=[65, 82, 102, 104]
+k = 4
 numberIterations = 10
 useUniformCentoirds = 0
 runNumber = 1
-stopChangePerIteration = 0.05
+stopChangePerIteration = 0.001
 
 
 #Inicialization
-print ("Running K-Means with K =  {} and {} variables ".format(k,len(clusterColumns)-1))
+print ("Running K-Means with K =  {} and {} variables ".format(k,len(clusterColumns)))
 selectedData = readDataSet(filename, clusterColumns)
 
-
-if(useUniformCentoirds == 1):
-    centroids = selectInitialCentoidUniform(selectedData)
-else:
-    centroids = selectInitialCentoid(selectedData)
+#centroids = selectInitialCentroid(selectedData)
+centroids = selectInitialCentroidWeighted(selectedData)
 reassignedClients = lines
 
 
 #Move elements from centroids
 while (reassignedClients/lines > stopChangePerIteration):
-#for i in range(1, numberIterations):
+#    for i in range(1, numberIterations):
     print("Run ", runNumber)
-#    #Creates List with clusters and the clients in each cluster. 
+    #Creates List with clusters and the clients in each cluster. 
     #Updates the original selectedData with the current number of cluster for the client.
     clusters = assignCluster(centroids)
     if(runNumber==1):
