@@ -151,12 +151,10 @@ def assignCluster(initialCentroids):
     print(reassignedClients)
 
     #creates a list for each cluster with the client details --Easy to do math operations on separate lists.
-    #THIS PART MIGHT BE DUPICATED; WE ARE GETTING THE CLUSTER ID ON TWO VARIABLES
     clusters = [[] for i in range(k)]  
     for client in selectedData:
         #Appends the client to the cluster list that corresponds WITHOUT the initial ID and the cluster number
         clusters[client[len(client) - 1]].append(client[1:len(client) - 1])
-
     return clusters
 
     
@@ -187,18 +185,34 @@ def updateCentroid(updatedCentroids,clusters):
     print("After",updatedCentroids)
     return updatedCentroids
 
+
+def ShowIntraclusterVariability(centroids):
+    distanceAux = 0.0
+    intraclusterVariability = []
+    for i in range(len(centroids)):
+        for client in range(len(clusters[i])):
+            tempClient = clusters[i][client]
+            for column in range(len(clusterColumns)):
+                distanceAux += math.pow(tempClient[column] - centroids[i][column], 2)
+        intraclusterVariability.append(distanceAux)
+    sumICV = 0.0
+    for i in range(len(centroids)):
+        print("Cluster {} has a intracluster variability of {}.".format(i+1, ('%.2f'%intraclusterVariability[i])))
+        sumICV += intraclusterVariability[i]
+    averageICV = sumICV/k
+    print("Sum of intracluster variability: {}".format('%.2f'%sumICV))
+    print("Average intracluster variability: {}.".format('%.2f'%averageICV))
+        
+def showStatistics(centroids):
+    for cluster in range(k):
+        for column in range(len(clusterColumns)):
+            print("Cluster {} in variable {} has an average of {}.".format(cluster+1,column+1,('%.2f'%(centroids[cluster][column]))))    
     
 def showResults():
-
     plotClusters(centroids, clusters, runNumber)
     for i in range(k):
         print("Cluster {} has {} elements".format(i+1,len(clusters[i])))  
         
-
-def showStatistics(centroids):
-    for cluster in range(k):
-        for column in range(len(clusterColumns)):
-            print("Cluster {} in variable {} has an average of {}.".format(cluster+1,column+1,('%.2f'%(centroids[cluster][column]))))
         
 def euclideanDistance(client, centroid):
     distanceAux = 0.0
@@ -212,13 +226,13 @@ def euclideanDistance(client, centroid):
 filename = "DatasetClean.csv"
 clusterColumns = []
 #clusterColumns=[3,4,1]
-#clusterColumns=[65, 82, 102, 104]
-clusterColumns = [65, 82, 102]
-k = 3
+clusterColumns=[65, 82, 102, 104]
+#clusterColumns = [65, 82, 102]
+k = 6
 numberIterations = 10
 useUniformCentoirds = 0
 runNumber = 1
-stopChangePerIteration = 0.001
+stopChangePerIteration = 0.0001
 
 
 #Inicialization
@@ -241,9 +255,10 @@ while (reassignedClients/lines > stopChangePerIteration):
          showResults()
     centroids = updateCentroid(centroids,clusters)
     runNumber += 1
-    
+
+ShowIntraclusterVariability(centroids)
 showStatistics(centroids)
 showResults()
 
-    
+
 
