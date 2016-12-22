@@ -135,6 +135,10 @@ def assignCluster(initialCentroids):
         #Every cluster needed
         for cluster in range(k):
             distance[client].append(euclideanDistance(selectedData[client], initialCentroids[cluster]))           
+            #distance[client].append(manhattanDistance(selectedData[client], initialCentroids[cluster]))           
+            #distance[client].append(weightedEuclideanDistance(selectedData[client], initialCentroids[cluster]))           
+            #distance[client].append(MinkowskiDistance(selectedData[client], initialCentroids[cluster]))           
+                      
             
     ##GETS THE CORRESPONDING CLUSTER FOR EACH CLIENT
     global reassignedClients
@@ -190,7 +194,7 @@ def updateCentroid(updatedCentroids,clusters):
     
 def showResults():
 
-    plotClusters(centroids, clusters, runNumber)
+    #plotClusters(centroids, clusters, runNumber)
     for i in range(k):
         print("Cluster {} has {} elements".format(i+1,len(clusters[i])))  
         
@@ -207,7 +211,36 @@ def euclideanDistance(client, centroid):
         distanceAux += math.pow(client[column + 1] - centroid[column], 2)
     distanceAux = math.sqrt(distanceAux)
     return distanceAux
-            
+
+
+def manhattanDistance(client, centroid):
+    distanceAux = 0.0
+    for column in range(len(clusterColumns)):
+    # +1 FIX for the last column with the ID of the client
+        distanceAux += abs(client[column + 1] - centroid[column])
+    
+    return distanceAux
+
+def weightedEuclideanDistance(client, centroid):
+    distanceAux = 0.0
+    #Column weight must add to 1
+    columnsWeight = [.33, .33, .33]
+    for column in range(len(clusterColumns)):
+    # +1 FIX for the last column with the ID of the client
+        distanceAux += math.pow(client[column + 1] - centroid[column], 2) * columnsWeight[column]
+    distanceAux = math.sqrt(distanceAux)
+    return distanceAux
+
+def MinkowskiDistance(client, centroid):
+    distanceAux = 0.0
+    r = 20
+    #Column weight must add to 1
+    for column in range(len(clusterColumns)):
+    # +1 FIX for the last column with the ID of the client
+        distanceAux += math.pow(math.pow(abs(client[column + 1] - centroid[column]), r),1/r)
+    distanceAux = math.sqrt(distanceAux)
+    return distanceAux
+
 ####GENERAL PARAMETERS ######
 filename = "DatasetClean.csv"
 clusterColumns = []
