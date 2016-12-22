@@ -193,7 +193,12 @@ def showResults():
     plotClusters(centroids, clusters, runNumber)
     for i in range(k):
         print("Cluster {} has {} elements".format(i+1,len(clusters[i])))  
+        
 
+def showStatistics(centroids):
+    for cluster in range(k):
+        for column in range(len(clusterColumns)):
+            print("Cluster {} in variable {} has an average of {}.".format(cluster+1,column+1,('%.2f'%(centroids[cluster][column]))))
         
 def euclideanDistance(client, centroid):
     distanceAux = 0.0
@@ -207,8 +212,9 @@ def euclideanDistance(client, centroid):
 filename = "DatasetClean.csv"
 clusterColumns = []
 #clusterColumns=[3,4,1]
-clusterColumns=[65, 82, 102, 104]
-k = 4
+#clusterColumns=[65, 82, 102, 104]
+clusterColumns = [65, 82, 102]
+k = 3
 numberIterations = 10
 useUniformCentoirds = 0
 runNumber = 1
@@ -236,6 +242,8 @@ while (reassignedClients/lines > stopChangePerIteration):
     centroids = updateCentroid(centroids,clusters)
     runNumber += 1
     
+showStatistics(centroids)
 showResults()
+
     
 
