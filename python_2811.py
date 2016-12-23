@@ -106,6 +106,8 @@ def selectInitialCentroidWeighted(selectedData):
                 for cluster in range(k):
                     if initialCentroids[cluster] != [0,0,0]:
                        initialDistance[client].append(euclideanDistance(selectedData[client], initialCentroids[cluster]))
+                       #initialDistance[client].append(manhattanDistance(selectedData[client], initialCentroids[cluster]))
+                       #initialDistance[client].append(MinkowskiDistance(selectedData[client], initialCentroids[cluster]))
                        smallestDistance[client] = math.pow(min(initialDistance[client]),2)
             boundary = 0.0
             for client in range (lines):
@@ -151,8 +153,8 @@ def assignCluster(initialCentroids):
         if(oldCluster != clusterNumber):
             reassignedClients += 1
             #print("Customer:",selectedData[clientID][0],"Old:",oldCluster," New:",clusterNumber,"Distance:",distance[clientID])
-    print("reassignedClients")
-    print(reassignedClients)
+    print("ReassignedClients: {}".format(reassignedClients))
+    
 
     #creates a list for each cluster with the client details --Easy to do math operations on separate lists.
     clusters = [[] for i in range(k)]  
@@ -177,7 +179,7 @@ def updateCentroid(updatedCentroids,clusters):
                # print(client[columnID])
                 sumVal[clusters.index(cluster)][columnID] += client[columnID]
                 countVal[clusters.index(cluster)][columnID] += 1 
-    print("Initial clustering", updatedCentroids)
+    #print("Initial clustering", updatedCentroids)
     #print("sumVal",sumVal)
     #print("countVal",countVal)
 
@@ -186,7 +188,7 @@ def updateCentroid(updatedCentroids,clusters):
             if(countVal[clusters.index(cluster)][columnID]>0):
                 updatedCentroids[clusters.index(cluster)][columnID] = sumVal[clusters.index(cluster)][columnID] / countVal[clusters.index(cluster)][columnID]
 
-    print("After",updatedCentroids)
+    #print("After",updatedCentroids)
     return updatedCentroids
 
 
@@ -252,7 +254,6 @@ def MinkowskiDistance(client, centroid):
     for column in range(len(clusterColumns)):
     # +1 FIX for the last column with the ID of the client
         distanceAux += math.pow(math.pow(abs(client[column + 1] - centroid[column]), r),1/r)
-    distanceAux = math.sqrt(distanceAux)
     return distanceAux
 
 ####GENERAL PARAMETERS ######
@@ -260,8 +261,8 @@ filename = "DatasetClean.csv"
 clusterColumns = []
 #clusterColumns=[3,4,1]
 clusterColumns=[65, 82, 102, 104]
-#clusterColumns = [65, 82, 102]
-k = 6
+#clusterColumns = [102, 104]
+k = 2
 numberIterations = 10
 useUniformCentoirds = 0
 runNumber = 1
@@ -269,7 +270,7 @@ stopChangePerIteration = 0.0001
 
 
 #Inicialization
-print ("Running K-Means with K =  {} and {} variables ".format(k,len(clusterColumns)))
+print ("Running K-Means with K = {} and {} variables ".format(k,len(clusterColumns)))
 selectedData = readDataSet(filename, clusterColumns)
 
 #centroids = selectInitialCentroid(selectedData)
