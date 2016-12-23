@@ -4,7 +4,7 @@ import math
 import matplotlib.pyplot as plot
 from sklearn.decomposition.pca import PCA
 
-def plotClusters(centroids, clusters,runNumber):
+def plotClusters(centroids, clusters, iterationNumber):
     colors = ["b", "g", "r","y","c","k","m","violet","aqua","forestgreen"]
     colorsCluster = ["g", "r","b","y","c","k","m","violet","aqua","forestgreen"]
 #    markers = ["o", "o", "o"]
@@ -12,7 +12,7 @@ def plotClusters(centroids, clusters,runNumber):
 
     fig, ax = plot.subplots()
     index = 0
-    ax.set_title('K-Means # {}'.format(runNumber))
+    ax.set_title('K-Means # {}'.format(iterationNumber))
     for cluster in clusters:
         if(len(cluster)>0):
             transformedPoints = PCA(2).fit_transform(cluster).tolist()
@@ -105,9 +105,9 @@ def selectInitialCentroidWeighted(selectedData):
                 #and select the shortest
                 for cluster in range(k):
                     if initialCentroids[cluster] != [0,0,0]:
-                       initialDistance[client].append(euclideanDistance(selectedData[client], initialCentroids[cluster]))
+                       #initialDistance[client].append(euclideanDistance(selectedData[client], initialCentroids[cluster]))
                        #initialDistance[client].append(manhattanDistance(selectedData[client], initialCentroids[cluster]))
-                       #initialDistance[client].append(MinkowskiDistance(selectedData[client], initialCentroids[cluster]))
+                       initialDistance[client].append(MinkowskiDistance(selectedData[client], initialCentroids[cluster]))
                        smallestDistance[client] = math.pow(min(initialDistance[client]),2)
             boundary = 0.0
             for client in range (lines):
@@ -136,10 +136,10 @@ def assignCluster(initialCentroids):
     for client in range(lines):       
         #Every cluster needed
         for cluster in range(k):
-            distance[client].append(euclideanDistance(selectedData[client], initialCentroids[cluster]))           
+            #distance[client].append(euclideanDistance(selectedData[client], initialCentroids[cluster]))           
             #distance[client].append(manhattanDistance(selectedData[client], initialCentroids[cluster]))           
             #distance[client].append(weightedEuclideanDistance(selectedData[client], initialCentroids[cluster]))           
-            #distance[client].append(MinkowskiDistance(selectedData[client], initialCentroids[cluster]))           
+            distance[client].append(MinkowskiDistance(selectedData[client], initialCentroids[cluster]))           
                       
             
     ##GETS THE CORRESPONDING CLUSTER FOR EACH CLIENT
@@ -215,7 +215,7 @@ def showStatistics(centroids):
             print("Cluster {} in variable {} has an average of {}.".format(cluster+1,column+1,('%.2f'%(centroids[cluster][column]))))    
     
 def showResults():
-    plotClusters(centroids, clusters, runNumber)
+    plotClusters(centroids, clusters, iterationNumber)
     for i in range(k):
         print("Cluster {} has {} elements".format(i+1,len(clusters[i])))  
         
@@ -249,7 +249,7 @@ def weightedEuclideanDistance(client, centroid):
 
 def MinkowskiDistance(client, centroid):
     distanceAux = 0.0
-    r = 20
+    r = 10
     #Column weight must add to 1
     for column in range(len(clusterColumns)):
     # +1 FIX for the last column with the ID of the client
@@ -260,13 +260,13 @@ def MinkowskiDistance(client, centroid):
 filename = "DatasetClean.csv"
 clusterColumns = []
 #clusterColumns=[3,4,1]
-clusterColumns=[65, 82, 102, 104]
-#clusterColumns = [102, 104]
+#clusterColumns=[65, 82, 102, 104]
+clusterColumns = [82, 102, 104]
 k = 2
 numberIterations = 10
 useUniformCentoirds = 0
-runNumber = 1
-stopChangePerIteration = 0.0001
+iterationNumber = 1
+stopChangePerIteration = 0
 
 
 #Inicialization
@@ -281,14 +281,14 @@ reassignedClients = lines
 #Move elements from centroids
 while (reassignedClients/lines > stopChangePerIteration):
 #    for i in range(1, numberIterations):
-    print("Run ", runNumber)
+    print("Iteration ", iterationNumber)
     #Creates List with clusters and the clients in each cluster. 
     #Updates the original selectedData with the current number of cluster for the client.
     clusters = assignCluster(centroids)
-    if(runNumber==1):
+    if(iterationNumber==1):
          showResults()
     centroids = updateCentroid(centroids,clusters)
-    runNumber += 1
+    iterationNumber += 1
 
 ShowIntraclusterVariability(centroids)
 showStatistics(centroids)
