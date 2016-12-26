@@ -6,7 +6,7 @@ from sklearn.decomposition.pca import PCA
 
 def plotClusters(centroids, clusters, iterationNumber):
     colors = ["b", "g", "r","y","c","k","m","violet","aqua","forestgreen"]
-    colorsCluster = ["g", "r","b","y","c","k","m","violet","aqua","forestgreen"]
+    #colorsCluster = ["g", "r","b","y","c","k","m","violet","aqua","forestgreen"]
 #    markers = ["o", "o", "o"]
 #    markers = ["^", "s", ""]
 
@@ -14,17 +14,16 @@ def plotClusters(centroids, clusters, iterationNumber):
     index = 0
     ax.set_title('K-Means # {}'.format(iterationNumber))
     for cluster in clusters:
-        if(len(cluster)>0):
-            transformedPoints = PCA(2).fit_transform(cluster).tolist()
-            for point in transformedPoints:
-                ax.scatter(point[0], point[1], color=colors[clusters.index(cluster)], s=5, marker=",")
-                #ax.annotate(str(point[1]), (point[1] + 1, point[2] + 1))
-                index = (index + 1) % len(colors)
+        transformedPoints = PCA(2).fit_transform(cluster).tolist()
+        for point in transformedPoints:
+            ax.scatter(point[0], point[1], color=colors[clusters.index(cluster)], s=5, marker="o")
+            #ax.annotate(str(point[1]), (point[1] + 1, point[2] + 1))
+            index = (index + 1) % len(colors)
     index = 0
     transformedPoints = PCA(2).fit_transform(centroids).tolist()
     print ("PCA centroids", transformedPoints)
     for point in transformedPoints:
-        ax.scatter(point[0], point[1], color=colorsCluster[index], s=900, marker="x")
+        ax.scatter(point[0], point[1], color=colors[index], s=900, marker="x")
         ax.annotate("C" + str(index + 1), (point[0] + 2, point[1] + 2))
         index = (index + 1) % len(colors)
 
@@ -228,7 +227,7 @@ def manhattanDistance(client, centroid):
 
     
 def automaticallyFindK():
-    terminationRule = 22
+    terminationRule = 12
     oldSumICV = 0
     newSumICV = 0
     stopChangePerIteration = 0
@@ -243,8 +242,15 @@ def automaticallyFindK():
         oldAvgICV = oldSumICV/(k-1)
         newAvgICV = newSumICV/k
         if (k != 2) and ((newSumICV > oldSumICV) or (newAvgICV/oldAvgICV >= .90)):
-            print("Selected number of k: {} ".format(k-1)) 
+            print("Previous intracluster variability sum: {}".format('%.2f'%oldSumICV))
+            print("New intracluster variability sum: {}".format('%.2f'%newSumICV))
+            print("New intracluster variability average/old intracluster variability average: {}".format('%.2f'%(newAvgICV / oldAvgICV)))
+            print("Selected number of k: {} ".format(k-1))
             return k-1
+        elif (k != 2):
+            print("Previous intracluster variability sum: {}".format('%.2f'%oldSumICV))
+            print("New intracluster variability sum: {}".format('%.2f'%newSumICV))
+            print("New intracluster variability average/old intracluster variability average: {}".format('%.2f'%(newAvgICV / oldAvgICV)))
         else:
             print("k is not {}".format(k-1))
     return None   
@@ -274,8 +280,8 @@ def kMeans(k):
 filename = "DatasetClean.csv"
 clusterColumns = []
 #clusterColumns=[3,4,1]
-#clusterColumns=[65, 82, 102, 104]
-clusterColumns = [102, 104]
+clusterColumns=[65, 82, 102, 104]
+#clusterColumns = [102, 104]
 numberIterations = 10
 stopChangePerIteration = 0
 
