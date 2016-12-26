@@ -6,27 +6,39 @@ from sklearn.decomposition.pca import PCA
 
 def plotClusters(centroids, clusters,runNumber):
     colors = ["b", "g", "r","y","c","k","m","violet","aqua","forestgreen"]
-    colorsCluster = ["g", "r","b","y","c","k","m","violet","aqua","forestgreen"]
+    colorsCluster = ["g", "r","b","c","y","m","k","aqua","violet","b"]
 #    markers = ["o", "o", "o"]
 #    markers = ["^", "s", ""]
 
     fig, ax = plot.subplots()
     index = 0
     ax.set_title('K-Means # {}'.format(runNumber))
+
     for cluster in clusters:
-        if(len(cluster)>0):
-            transformedPoints = PCA(2).fit_transform(cluster).tolist()
-            for point in transformedPoints:
-                ax.scatter(point[0], point[1], color=colors[clusters.index(cluster)], s=5, marker=",")
-                #ax.annotate(str(point[1]), (point[1] + 1, point[2] + 1))
-                index = (index + 1) % len(colors)
-    index = 0
-    transformedPoints = PCA(2).fit_transform(centroids).tolist()
-    print ("PCA centroids", transformedPoints)
-    for point in transformedPoints:
-        ax.scatter(point[0], point[1], color=colorsCluster[index], s=900, marker="x")
-        ax.annotate("C" + str(index + 1), (point[0] + 2, point[1] + 2))
-        index = (index + 1) % len(colors)
+            if(len(cluster)>0):
+                i = 1
+                #Add the centroid to the set to create the graph on the same scale
+                cluster.append(centroids[clusters.index(cluster)])
+                transformedPoints = PCA(2).fit_transform(cluster).tolist()
+                for point in transformedPoints:
+                    if(i<len(transformedPoints)):
+                        ax.scatter(point[0], point[1], color=colors[clusters.index(cluster)], s=5, marker=",")
+                        #ax.annotate(str(point[1]), (point[1] + 1, point[2] + 1))
+                        index = (index + 1) % len(colors)
+                    else:
+                        ax.scatter(point[0], point[1], color=colorsCluster[index], s=500, marker="D")
+                        #delete centroid from the set
+                        transformedPoints.pop(i-1)
+                    i += 1
+    
+
+#    index = 0
+#    transformedPoints = PCA(2).fit_transform(centroids).tolist()
+#    print ("PCA centroids", transformedPoints)
+#    for point in transformedPoints:
+#        ax.scatter(point[0], point[1], color=colorsCluster[index], s=900, marker="x")
+#        ax.annotate("C" + str(index + 1), (point[0] + 2, point[1] + 2))
+#        index = (index + 1) % len(colors)
 
     fig.canvas.draw()
     fig.show()
