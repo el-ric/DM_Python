@@ -4,6 +4,39 @@ import math
 import matplotlib.pyplot as plot
 from sklearn.decomposition.pca import PCA
 
+
+
+def plotClustersNew(centroids, clusters,runNumber):
+    colors = ["b", "g", "r","y","c","k","m","violet","aqua","forestgreen"]
+    colorsCluster = ["g", "r","b","c","y","m","k","aqua","violet","b"]
+#    markers = ["o", "o", "o"]
+#    markers = ["^", "s", ""]
+
+    fig, ax = plot.subplots()
+    i = 0
+    ax.set_title('K-Means # {}'.format(runNumber))
+    newData = []
+    clusterNumber = []
+    #clusterNumber = [[] for i in range(lines)]  
+    for client in selectedData:
+        newData.append(client[1:-1])
+        clusterNumber.append(client[-1])
+
+    for cluster in centroids:
+        newData.append(cluster)
+    transformedPoints = PCA(2).fit_transform(newData).tolist()
+    target = len(transformedPoints) - len(centroids) -1
+    for point in transformedPoints:
+        if(i < target):
+            ax.scatter(point[0], point[1], color=colors[clusterNumber[i]], s=5, marker=",")
+        else:
+            ax.scatter(point[0], point[1], color=colorsCluster[(i+1)  % len(colors)], s=500, marker="D")
+        i += 1
+
+    fig.canvas.draw()
+    fig.show()
+
+
 def plotClusters(centroids, clusters,runNumber):
     colors = ["b", "g", "r","y","c","k","m","violet","aqua","forestgreen"]
     colorsCluster = ["g", "r","b","c","y","m","k","aqua","violet","b"]
@@ -225,7 +258,7 @@ def showStatistics(centroids):
             print("Cluster {} in variable {} has an average of {}.".format(cluster+1,column+1,('%.2f'%(centroids[cluster][column]))))    
     
 def showResults():
-    plotClusters(centroids, clusters, runNumber)
+    plotClustersNew(centroids, clusters, runNumber)
     for i in range(k):
         print("Cluster {} has {} elements".format(i+1,len(clusters[i])))  
         
