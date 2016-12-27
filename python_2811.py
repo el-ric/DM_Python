@@ -5,7 +5,6 @@ import matplotlib.pyplot as plot
 from sklearn.decomposition.pca import PCA
 
 
-
 def plotClustersNew(centroids, clusters,runNumber):
     colors = ["b", "g", "r","y","c","k","m","violet","aqua","forestgreen"]
     colorsCluster = ["g", "r","b","c","y","m","k","aqua","violet","b"]
@@ -21,18 +20,17 @@ def plotClustersNew(centroids, clusters,runNumber):
     for client in selectedData:
         newData.append(client[1:-1])
         clusterNumber.append(client[-1])
-
+    
     for cluster in centroids:
         newData.append(cluster)
+
     transformedPoints = PCA(2).fit_transform(newData).tolist()
     target = len(transformedPoints) - len(centroids)
-    print(len(centroids))
-    print(target)
     for point in transformedPoints:
         if(i < target):
             ax.scatter(point[0], point[1], color=colors[clusterNumber[i]], s=5, marker=",")
         else:
-            ax.scatter(point[0], point[1], color=colorsCluster[(i+1)  % len(colors)], s=500, marker="x")
+            ax.scatter(point[0], point[1], color=colorsCluster[(i+1)  % len(colors)], s=250, marker="x")
         i += 1
 
     fig.canvas.draw()
@@ -289,19 +287,21 @@ def automaticallyFindK():
         newSumICV = intraclusterVariability(centroids, clusters, False)
         oldAvgICV = oldSumICV/(k-1)
         newAvgICV = newSumICV/k
-        if (k != 2) and ((newSumICV > oldSumICV) or (newAvgICV/oldAvgICV >= .90)):
-            print("\nPrevious intracluster variability sum: {}".format('%.2f'%oldSumICV))
-            print("New intracluster variability sum: {}".format('%.2f'%newSumICV))
-            print("New intracluster variability average/old intracluster variability average: {}".format('%.2f'%(newAvgICV / oldAvgICV)))
-            print("Selected number of k: {} ".format(k-1))
+        if (k != 2) and ((newSumICV > oldSumICV) and (newAvgICV/oldAvgICV > .80)):
+            print("\nSelected number of k: {} ".format(k-1))
+            print("K={} intracluster variability sum: {}".format(k-1,'%.2f'%oldSumICV))
+            print("K={} intracluster variability sum: {}".format(k, '%.2f'%newSumICV))
+            print("K={} intracluster variability average: {}".format(k-1,'%.2f'%oldAvgICV))
+            print("K={} intracluster variability average: {}".format(k, '%.2f'%newAvgICV))
+            print("K={} intracluster variability average/K={} intracluster variability average: {}".format(k, k-1, '%.2f'%(newAvgICV / oldAvgICV)))
             return k-1
         elif (k != 2):
             print("\nk is not {}".format(k-1))
-            print("Previous intracluster variability sum: {}".format('%.2f'%oldSumICV))
-            print("New intracluster variability sum: {}".format('%.2f'%newSumICV))
-            print("New intracluster variability average/old intracluster variability average: {}".format('%.2f'%(newAvgICV / oldAvgICV)))
-        else:
-            print("k is not {}".format(k-1))
+            print("K={} intracluster variability sum: {}".format(k-1,'%.2f'%oldSumICV))
+            print("K={} intracluster variability sum: {}".format(k, '%.2f'%newSumICV))
+            print("K={} intracluster variability average: {}".format(k-1,'%.2f'%oldAvgICV))
+            print("K={} intracluster variability average: {}".format(k, '%.2f'%newAvgICV))
+            print("K={} intracluster variability average/K={} intracluster variability average: {}".format(k, k-1, '%.2f'%(newAvgICV / oldAvgICV)))
     return None   
     
 def kMeans(k):
@@ -329,8 +329,8 @@ def kMeans(k):
 filename = "DatasetClean.csv"
 clusterColumns = []
 #clusterColumns=[3,4,1]
-clusterColumns=[65, 82, 102, 104]
-#clusterColumns = [102, 104]
+#clusterColumns=[65, 82, 102, 104]
+clusterColumns = [65, 82, 102]
 numberIterations = 10
 stopChangePerIteration = 0
 
@@ -340,9 +340,12 @@ selectedData = readDataSet(filename, clusterColumns)
                 
 #Finding K
 print("Automatically finding k...")
-k = automaticallyFindK()
 #k = 4
-print ("Running K-Means with K = {} and {} variables ".format(k,len(clusterColumns)))
-kMeans(k)
+k = automaticallyFindK()
+if k != None:
+    print ("\nRunning K-Means with K = {} and {} variables ".format(k,len(clusterColumns)))
+    kMeans(k)
+else:
+    print("Could not determine K. Please try again or manually define k.")
 
-
+    
