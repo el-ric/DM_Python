@@ -25,12 +25,14 @@ def plotClustersNew(centroids, clusters,runNumber):
     for cluster in centroids:
         newData.append(cluster)
     transformedPoints = PCA(2).fit_transform(newData).tolist()
-    target = len(transformedPoints) - len(centroids) -1
+    target = len(transformedPoints) - len(centroids)
+    print(len(centroids))
+    print(target)
     for point in transformedPoints:
         if(i < target):
             ax.scatter(point[0], point[1], color=colors[clusterNumber[i]], s=5, marker=",")
         else:
-            ax.scatter(point[0], point[1], color=colorsCluster[(i+1)  % len(colors)], s=500, marker="D")
+            ax.scatter(point[0], point[1], color=colorsCluster[(i+1)  % len(colors)], s=500, marker="x")
         i += 1
 
     fig.canvas.draw()
@@ -288,12 +290,13 @@ def automaticallyFindK():
         oldAvgICV = oldSumICV/(k-1)
         newAvgICV = newSumICV/k
         if (k != 2) and ((newSumICV > oldSumICV) or (newAvgICV/oldAvgICV >= .90)):
-            print("Previous intracluster variability sum: {}".format('%.2f'%oldSumICV))
+            print("\nPrevious intracluster variability sum: {}".format('%.2f'%oldSumICV))
             print("New intracluster variability sum: {}".format('%.2f'%newSumICV))
             print("New intracluster variability average/old intracluster variability average: {}".format('%.2f'%(newAvgICV / oldAvgICV)))
             print("Selected number of k: {} ".format(k-1))
             return k-1
         elif (k != 2):
+            print("\nk is not {}".format(k-1))
             print("Previous intracluster variability sum: {}".format('%.2f'%oldSumICV))
             print("New intracluster variability sum: {}".format('%.2f'%newSumICV))
             print("New intracluster variability average/old intracluster variability average: {}".format('%.2f'%(newAvgICV / oldAvgICV)))
@@ -320,7 +323,7 @@ def kMeans(k):
     print("Average intracluster variability: {}.".format('%.2f'%(sumICV/k)))
     clusterDistribution(clusters)   
     clusterAverage(centroids) 
-    plotClusters(centroids, clusters, iterationNumber)
+    plotClustersNew(centroids, clusters, iterationNumber)
 
 ####GENERAL PARAMETERS ######
 filename = "DatasetClean.csv"
@@ -338,6 +341,7 @@ selectedData = readDataSet(filename, clusterColumns)
 #Finding K
 print("Automatically finding k...")
 k = automaticallyFindK()
+#k = 4
 print ("Running K-Means with K = {} and {} variables ".format(k,len(clusterColumns)))
 kMeans(k)
 
