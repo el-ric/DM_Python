@@ -272,11 +272,12 @@ def manhattanDistance(client, centroid):
     # +1 FIX for the last c                                          
 
     
-def automaticallyFindK():
+def findAK():
     terminationRule = 12
     oldSumICV = 0
     newSumICV = 0
     stopChangePerIteration = 0
+    plateauFlag = False
     for k in range (2, terminationRule):
         oldSumICV = newSumICV
         centroids = selectInitialCentroidWeighted(selectedData, k, False)
@@ -287,7 +288,8 @@ def automaticallyFindK():
         newSumICV = intraclusterVariability(centroids, clusters, False)
         oldAvgICV = oldSumICV/(k-1)
         newAvgICV = newSumICV/k
-        if (k != 2) and ((newSumICV > oldSumICV) and (newAvgICV/oldAvgICV > .80)):
+        print("Testing with K={}".format(k))
+        if (oldAvgICV != 0) and ((newSumICV > oldSumICV) and (newAvgICV/oldAvgICV > .80)): 
             print("\nSelected number of k: {} ".format(k-1))
             print("K={} intracluster variability sum: {}".format(k-1,'%.2f'%oldSumICV))
             print("K={} intracluster variability sum: {}".format(k, '%.2f'%newSumICV))
@@ -295,14 +297,38 @@ def automaticallyFindK():
             print("K={} intracluster variability average: {}".format(k, '%.2f'%newAvgICV))
             print("K={} intracluster variability average/K={} intracluster variability average: {}".format(k, k-1, '%.2f'%(newAvgICV / oldAvgICV)))
             return k-1
-        elif (k != 2):
-            print("\nk is not {}".format(k-1))
-            print("K={} intracluster variability sum: {}".format(k-1,'%.2f'%oldSumICV))
-            print("K={} intracluster variability sum: {}".format(k, '%.2f'%newSumICV))
-            print("K={} intracluster variability average: {}".format(k-1,'%.2f'%oldAvgICV))
-            print("K={} intracluster variability average: {}".format(k, '%.2f'%newAvgICV))
-            print("K={} intracluster variability average/K={} intracluster variability average: {}".format(k, k-1, '%.2f'%(newAvgICV / oldAvgICV)))
-    return None   
+        elif (oldAvgICV != 0) and (newAvgICV/oldAvgICV > .80 and plateauFlag):
+            print("Reached a plateau.")
+            print("\nSelected number of k: {} ".format(k-2))
+            return k-2
+        if (oldAvgICV != 0) and (newAvgICV/oldAvgICV > .80):
+            plateauFlag = True
+    return -1   
+    
+def automaticallyFindK():
+    numberOfAttempts = 6
+    suggestedK = []
+    acceptableNClusters = 10
+    countSuggestedK = []
+    finalK = 0
+    for i in range (numberOfAttempts):
+        print("\nAttempt #{} to find k.".format(i+1))
+        suggestedK.append(findAK())
+    for i in range (2, acceptableNClusters+2):
+        countSuggestedK.append(suggestedK.count(i))
+    for i in range (len(countSuggestedK)):
+        if(countSuggestedK[i] > 0):
+            print("K = {} was suggested {} times.".format(i+2, countSuggestedK[i]))
+    countSuggestedK.append(suggestedK.count(-1))
+    if(countSuggestedK[acceptableNClusters] > 0):
+        print("Unable to find an acceptable k {} times.".format(i+2, countSuggestedK[i]))
+    print("Suggested K")
+    print(suggestedK)
+    finalK = countSuggestedK.index(max(countSuggestedK)) + 2
+    
+    print("Final K")
+    print(finalK)
+    return finalK
     
 def kMeans(k):
     stopChangePerIteration = 0
@@ -338,9 +364,8 @@ stopChangePerIteration = 0
 #Read data
 selectedData = readDataSet(filename, clusterColumns)
                 
-#Finding K
-print("Automatically finding k...")
 #k = 4
+
 k = automaticallyFindK()
 if k != None:
     print ("\nRunning K-Means with K = {} and {} variables ".format(k,len(clusterColumns)))
