@@ -371,7 +371,7 @@ clusterColumns = []
 clusterColumns = [82, 102, 104]
 numberIterations = 10
 stopChangePerIteration = 0
-
+printResults = False
 selectedDistance = "Euclidean"
 #selectedDistance = "Manhattan"
 #selectedDistance = "Minkowski"
@@ -381,13 +381,13 @@ def tests():
     newSumICV = 0
     stopChangePerIteration = 0
     for k in range (2, terminationRule):
-        centroids = selectInitialCentroidWeighted(selectedData, k, False)
+        centroids = selectInitialCentroidWeighted(selectedData, k, printResults)
         reassignedClients = 1
         while (reassignedClients/lines > stopChangePerIteration):
             clusters, reassignedClients = assignCluster(centroids, k)
             centroids = updateCentroid(centroids,clusters, k)
-        newSumICV = intraclusterVariability(centroids, clusters, False)
-        print(newSumICV)
+        newSumICV = intraclusterVariability(centroids, clusters, printResults)
+        print("With k={} the sum of intraclusters variability is {}".format(k,newSumICV))
         
 
 #Read data
@@ -396,11 +396,11 @@ tests()
 
 #Select K                
 #k = 4
-#k = automaticallyFindK()
-#if k != -1:
-#    print ("\nRunning K-Means with K = {} and {} variables ".format(k,len(clusterColumns)))
-#    kMeans(k)
-#else:
-#    print("Could not determine K. Please try again or manually define k.")
+k = automaticallyFindK()
+if k != -1:
+    print ("\nRunning K-Means with K = {} and {} variables ".format(k,len(clusterColumns)))
+    kMeans(k)
+else:
+    print("Could not determine K. Please try again or manually define k.")
 
     
