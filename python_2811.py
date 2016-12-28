@@ -131,9 +131,12 @@ def selectInitialCentroidWeighted(selectedData, k, finalFunction):
                 #and select the shortest
                 for cluster in range(k):
                     if initialCentroids[cluster] != [0,0,0]:
-                       initialDistance[client].append(euclideanDistance(selectedData[client], initialCentroids[cluster]))
-                       #initialDistance[client].append(manhattanDistance(selectedData[client], initialCentroids[cluster]))
-                       #initialDistance[client].append(MinkowskiDistance(selectedData[client], initialCentroids[cluster]))
+                       if(selectedDistance == "Euclidean"):
+                          initialDistance[client].append(euclideanDistance(selectedData[client], initialCentroids[cluster]))
+                       elif(selectedDistance == "Manhattan"):
+                          initialDistance[client].append(manhattanDistance(selectedData[client], initialCentroids[cluster]))
+                       elif(selectedDistance == "Minkowski"):
+                          initialDistance[client].append(MinkowskiDistance(selectedData[client], initialCentroids[cluster]))
                        smallestDistance[client] = math.pow(min(initialDistance[client]),2)
             boundary = 0.0
             for client in range (lines):
@@ -164,12 +167,13 @@ def assignCluster(initialCentroids, k):
     for client in range(lines):       
         #Every cluster needed
         for cluster in range(k):
-            distance[client].append(euclideanDistance(selectedData[client], initialCentroids[cluster]))           
-            #distance[client].append(manhattanDistance(selectedData[client], initialCentroids[cluster]))           
-            #distance[client].append(weightedEuclideanDistance(selectedData[client], initialCentroids[cluster]))           
-            #distance[client].append(MinkowskiDistance(selectedData[client], initialCentroids[cluster]))           
+            if(selectedDistance == "Euclidean"):
+                distance[client].append(euclideanDistance(selectedData[client], initialCentroids[cluster]))           
+            elif(selectedDistance == "Manhattan"):
+                distance[client].append(manhattanDistance(selectedData[client], initialCentroids[cluster]))           
+            elif(selectedDistance == "Minkowski"):       
+                distance[client].append(MinkowskiDistance(selectedData[client], initialCentroids[cluster]))           
                       
-            
     ##GETS THE CORRESPONDING CLUSTER FOR EACH CLIENT
     
     reassignedClients = 0
@@ -261,8 +265,16 @@ def manhattanDistance(client, centroid):
     for column in range(len(clusterColumns)):
     # +1 FIX for the last column with the ID of the client
         distanceAux += abs(client[column + 1] - centroid[column])
-    
     return distanceAux
+    
+def MinkowskiDistance(client, centroid): 
+    distanceAux = 0.0 
+    r = 20 
+    #Column weight must add to 1 
+    for column in range(len(clusterColumns)): 
+    # +1 FIX for the last column with the ID of the client 
+        distanceAux += math.pow(math.pow(abs(client[column + 1] - centroid[column]), r),1/r) 
+    return distanceAux 
 
 #def weightedEuclideanDistance(client, centroid):
 #    distanceAux = 0.0
@@ -356,21 +368,39 @@ filename = "DatasetClean.csv"
 clusterColumns = []
 #clusterColumns=[3,4,1]
 #clusterColumns=[65, 82, 102, 104]
-clusterColumns = [65, 82, 102]
+clusterColumns = [82, 102, 104]
 numberIterations = 10
 stopChangePerIteration = 0
 
+selectedDistance = "Euclidean"
+#selectedDistance = "Manhattan"
+#selectedDistance = "Minkowski"
+
+def tests():
+    terminationRule = 11
+    newSumICV = 0
+    stopChangePerIteration = 0
+    for k in range (2, terminationRule):
+        centroids = selectInitialCentroidWeighted(selectedData, k, False)
+        reassignedClients = 1
+        while (reassignedClients/lines > stopChangePerIteration):
+            clusters, reassignedClients = assignCluster(centroids, k)
+            centroids = updateCentroid(centroids,clusters, k)
+        newSumICV = intraclusterVariability(centroids, clusters, False)
+        print(newSumICV)
+        
 
 #Read data
 selectedData = readDataSet(filename, clusterColumns)
-                
-#k = 4
+tests()
 
-k = automaticallyFindK()
-if k != None:
-    print ("\nRunning K-Means with K = {} and {} variables ".format(k,len(clusterColumns)))
-    kMeans(k)
-else:
-    print("Could not determine K. Please try again or manually define k.")
+#Select K                
+#k = 4
+#k = automaticallyFindK()
+#if k != -1:
+#    print ("\nRunning K-Means with K = {} and {} variables ".format(k,len(clusterColumns)))
+#    kMeans(k)
+#else:
+#    print("Could not determine K. Please try again or manually define k.")
 
     
