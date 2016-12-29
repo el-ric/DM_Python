@@ -176,7 +176,7 @@ def updateCentroid(updatedCentroids,clusters, k):
     return updatedCentroids
 
 
-def intraclusterVariability(centroids, clusters, finalFunction):
+def intraclusterVariability(centroids, clusters):
     distanceAux = 0.0
     intraclusterVariability = []
     for i in range(len(centroids)):
@@ -188,8 +188,6 @@ def intraclusterVariability(centroids, clusters, finalFunction):
     sumICV = 0.0
     for i in range(len(centroids)):
         sumICV += intraclusterVariability[i]
-        if finalFunction:
-            print("Cluster {} has a intracluster variability of {}.".format(i+1, ('%.2f'%intraclusterVariability[i])))
     return sumICV
     
         
@@ -241,7 +239,7 @@ def findAK():
         while (reassignedClients/lines > stopChangePerIteration):
             clusters, reassignedClients = assignCluster(centroids, k)
             centroids = updateCentroid(centroids,clusters, k)
-        newSumICV = intraclusterVariability(centroids, clusters, False)
+        newSumICV = intraclusterVariability(centroids, clusters)
         oldAvgICV = oldSumICV/(k-1)
         newAvgICV = newSumICV/k
         print("Testing with K={}".format(k))
@@ -259,6 +257,8 @@ def findAK():
             return k-2
         if (oldAvgICV != 0) and (newAvgICV/oldAvgICV > .80):
             plateauFlag = True
+        else:
+            plateauFlag = False
     return -1   
     
     
@@ -299,10 +299,11 @@ def kMeans(k):
             if(iterationNumber==1):
                 print("\nResults of the first iteration:")
                 clusterDistribution(clusters)
+                plotClusters(centroids, clusters, iterationNumber)
             iterationNumber += 1
     print("\nTermination condition reached.")
     print("\nResults of the last iteration (iteration {})".format(iterationNumber))
-    sumICV = intraclusterVariability(centroids, clusters, True)
+    sumICV = intraclusterVariability(centroids, clusters)
     print("Sum of intracluster variability: {}".format('%.2f'%sumICV))
     print("Average intracluster variability: {}.".format('%.2f'%(sumICV/k)))
     clusterDistribution(clusters)   
@@ -316,7 +317,7 @@ clusterColumns = []
 clusterColumns = [65, 82, 102, 104]
 numberIterations = 10
 stopChangePerIteration = 0
-printResults = False
+
 selectedDistance = "Euclidean"
 #selectedDistance = "Manhattan"
 #selectedDistance = "Minkowski"
@@ -327,7 +328,7 @@ selectedDistance = "Euclidean"
 selectedData = readDataSet(filename, clusterColumns)
 
 #Select K                
-#k = 4
+#k = 5
 k = automaticallyFindK()
 if k != -1:
     print ("\nRunning K-Means with K = {} and {} variables ".format(k,len(clusterColumns)))
