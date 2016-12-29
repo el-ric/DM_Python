@@ -8,8 +8,6 @@ from sklearn.decomposition.pca import PCA
 def plotClusters(centroids, clusters,runNumber):
     colors = ["b", "g", "r","y","c","k","m","violet","aqua","forestgreen"]
     colorsCluster = ["g", "r","b","c","y","m","k","aqua","violet","b"]
-#    markers = ["o", "o", "o"]
-#    markers = ["^", "s", ""]
 
     fig, ax = plot.subplots()
     i = 0
@@ -53,8 +51,7 @@ def readDataSet(filename, clusterColumns):
         selectedData[i] = [data[i][0]]
         for j in range(len(clusterColumns)):
             selectedData[i].append(data[i][clusterColumns[j]])
-        selectedData[i].append(initialCluster)
-    
+        selectedData[i].append(initialCluster)    
     return selectedData
     
        
@@ -64,9 +61,7 @@ def selectInitialCentroid(selectedData):
     for i in range(k):
         r = random.randint(0, lines)
         #From the original dataset take away the first and last element (id of client and cluster)
-        initialCentroids[i] = selectedData[r][1:len(selectedData[r])-1]
-
-    
+        initialCentroids[i] = selectedData[r][1:len(selectedData[r])-1]   
     print ("Initial centroids selected")
     print(initialCentroids)
     return initialCentroids
@@ -84,8 +79,7 @@ def selectInitialCentroidWeighted(selectedData, k, finalFunction):
         ##SELECTS K-1 CENTROIDS FROM THE NEW SET WITH A WEIGHTED PROBABILITY
         #COMPUTE THE WEIGHT DISTANCE TO THE CENTROID
             initialDistance = [[] for i in range(lines)]
-            smallestDistance = [0 for i in range(lines)]
-            
+            smallestDistance = [0 for i in range(lines)]            
             for client in range(lines):
                 #calculate the distance to the previous selected centroids 
                 #and select the shortest
@@ -111,8 +105,6 @@ def selectInitialCentroidWeighted(selectedData, k, finalFunction):
                     tempClient = client
                     break
             initialCentroids[i] = selectedData[tempClient][1:len(selectedData[tempClient])-1]
-    
-    
     if finalFunction: 
         print ("Initial centroids selected")
         print(initialCentroids)
@@ -132,10 +124,8 @@ def assignCluster(initialCentroids, k):
             elif(selectedDistance == "Manhattan"):
                 distance[client].append(manhattanDistance(selectedData[client], initialCentroids[cluster]))           
             elif(selectedDistance == "Minkowski"):       
-                distance[client].append(MinkowskiDistance(MinkowskiR, selectedData[client], initialCentroids[cluster]))           
-                      
-    ##GETS THE CORRESPONDING CLUSTER FOR EACH CLIENT
-    
+                distance[client].append(MinkowskiDistance(MinkowskiR, selectedData[client], initialCentroids[cluster]))          
+    ##GETS THE CORRESPONDING CLUSTER FOR EACH CLIENT    
     reassignedClients = 0
     oldCluster = 0
     for client in range(lines):
@@ -143,11 +133,7 @@ def assignCluster(initialCentroids, k):
         oldCluster =  selectedData[client][len(selectedData[client])-1]
         selectedData[client][len(selectedData[client])-1] = clusterNumber
         if(oldCluster != clusterNumber):
-            reassignedClients += 1
-            #print("Customer:",selectedData[clientID][0],"Old:",oldCluster," New:",clusterNumber,"Distance:",distance[clientID])
-    #print("ReassignedClients: {}".format(reassignedClients))
-    
-
+            reassignedClients += 1    
     #creates a list for each cluster with the client details --Easy to do math operations on separate lists.
     clusters = [[] for i in range(k)]  
     for client in selectedData:
@@ -167,12 +153,10 @@ def updateCentroid(updatedCentroids,clusters, k):
                 # +1 offsetIdClient because the first element of the client is the ID.
                 sumVal[clusters.index(cluster)][columnID] += client[columnID]
                 countVal[clusters.index(cluster)][columnID] += 1 
-
     for cluster in clusters:
         for columnID in range(len(clusterColumns)):
             if(countVal[clusters.index(cluster)][columnID]>0):
                 updatedCentroids[clusters.index(cluster)][columnID] = sumVal[clusters.index(cluster)][columnID] / countVal[clusters.index(cluster)][columnID]
-
     return updatedCentroids
 
 
@@ -281,8 +265,7 @@ def automaticallyFindK():
         print("Unable to find an acceptable k {} times.".format(i+2, countSuggestedK[i]))
     print("Suggested K")
     print(suggestedK)
-    finalK = countSuggestedK.index(max(countSuggestedK)) + 2
-    
+    finalK = countSuggestedK.index(max(countSuggestedK)) + 2    
     print("Final K")
     print(finalK)
     return finalK
